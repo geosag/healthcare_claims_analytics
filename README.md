@@ -68,10 +68,75 @@ The underlying data model has been optimized for Power BI, transitioning from a 
 
 ```text
 healthcare_claims_analytics/
-├── postgres_database/
+├── postgres_db/
 │   └── select_queries.sql
+├── data_model/
+│   └── PBI_model_view.png
 ├── .gitignore
 └── README.md
+
+## Key DAX Measures
+
+To handle data quality variations and calculate composite financial metrics, several custom DAX measures were developed. These include dynamic UI text generators that alert users to missing demographic or coverage data without breaking the visual experience. Some of them are:
+
+**1. Dynamic Data Quality Flag (Age Demographics)**
+Evaluates the underlying fact and dimension tables to identify claims missing patient age data. It dynamically generates a warning string, automatically adjusting for singular/plural grammar and hiding itself if data is 100% complete.
+
+```dax
+Claims Volume by Age Group Filter = 
+    IF(
+        (
+        CALCULATE(COUNTROWS(claims), REMOVEFILTERS('members'[age_bins])) - 
+        CALCULATE(COUNTROWS('members'))
+        ) = 0, 
+        "",
+        IF(
+            (
+            CALCULATE(COUNTROWS(claims), REMOVEFILTERS('members'[age_bins])) - 
+            CALCULATE(COUNTROWS('members'))
+            ) = 1, 
+            "* " & FORMAT((
+                            CALCULATE(COUNTROWS(claims), REMOVEFILTERS('members'[age_bins])) - 
+                            CALCULATE(COUNTROWS('members'))
+                            ), "#,##0") & " claim is missing demographic data",
+            "* " & FORMAT((
+                            CALCULATE(COUNTROWS(claims), REMOVEFILTERS('members'[age_bins])) - 
+                            CALCULATE(COUNTROWS('members'))
+                            ), "#,##0") & " claims are missing demographic data"
+        )
+    )
+```
+
+**2. Orphaned Record Identifier (Coverage Plan)**
+Identifies and calculates the financial impact of claims processed without an associated insurance coverage plan, formatting the output into a readable currency string for the dashboard subtitle.
+
+```dax
+Total Spend by Coverage Plan Filter = 
+    IF(
+        CALCULATE(SUM(payments[net_payment]), REMOVEFILTERS('members'[age_bins]), coverages[coverage_name] = BLANK()) = 0,
+        "",
+        "* € " & FORMAT(DIVIDE(CALCULATE(SUM(payments[net_payment]), REMOVEFILTERS('members'[age_bins]), coverages[coverage_name] = BLANK()), 1000), "0.00\K") & " without Coverage Plan data contribute to the Total Net Payment"
+    )
+```
+
+**3. Total Patient Responsibility**
+A composite financial metric that uses an iterator function to calculate the total out-of-pocket cost for the patient row-by-row before aggregating.
+
+```dax
+Total Patient Responsibility = 
+    SUMX(payments, payments[copay_amount] + payments[coinsurance_amount] + payments[deductible_amount])
+```
+
+**4. Core Operational Aggregations**
+Standard baseline measures used to construct the overall 'Average Payment per Claim' KPI, utilizing distinct counts to avoid duplicating claim headers.
+
+```dax
+Total Net Payment = SUM(payments[net_payment])
+
+Total Claims Volume = DISTINCTCOUNT(claims[claim_id])
+
+Average Payment per Claim = DIVIDE([Total Net Payment], [Total Claims Volume], 0)
+```
 
 ---
 
