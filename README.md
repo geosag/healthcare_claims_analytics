@@ -1,6 +1,6 @@
 # Healthcare Claims Analytics
 
-A comprehensive data model and Power BI dashboard for monitoring and analyzing healthcare claims processing, financial performance, and patient demographics. Relational data spanning members, providers, and payment transactions is transformed into an analytical schema and visualized across a 3-page interactive report.
+A comprehensive data model and Power BI dashboard for monitoring and analyzing healthcare claims processing, financial performance, and patient demographics. Relational data spanning members, providers, and payment transactions is transformed into an analytical schema and visualized across a 3-view interactive report.
 
 📊 [**View the live dashboard**](https://app.powerbi.com/view?r=eyJrIjoiOWI5MWU2N2MtMjJiNC00NTQxLWIyNzAtZGY4MzAyZGRiMThkIiwidCI6IjIyMzk4NzFkLTBmNmItNDQ4NS04ZjIzLTM1NmE0MzJlYzNmYiJ9)
 
